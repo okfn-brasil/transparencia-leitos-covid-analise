@@ -94,6 +94,7 @@ def plot_barh(df, metric_col,
               round_pct=False, ascending=True,
               file_format='png',
               file_name=None, charts_folder=CHARTS_FOLDER,
+              zero_is_unavailable=False,
               **kwargs):
     df_tmp = df[metric_col].sort_values(ascending=ascending)
     if round_pct is True:
@@ -117,6 +118,8 @@ def plot_barh(df, metric_col,
         for p in ax.patches:
             left, bottom, width, height = p.get_bbox().bounds
             label = str(round(width, 1))
+            if zero_is_unavailable and width == 0:
+                label = '(Dados indisponíveis)'
             ax.annotate(label, xy=((left + width) + 0.5, bottom + height / 2),
                         ha='left', va='center')
 
