@@ -2,3 +2,4 @@ python-env/
 data/hospitais/
 *.ipynb_checkpoints/*
 *.~lock.*
+*__pycache__*
