@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.dates import DateFormatter
 import seaborn as sns
 
 # this sets the python locale to pt_BR.UTF-8
@@ -92,9 +93,11 @@ def plot_barh(df, metric_col,
               ylabel='', xlabel='', annotate=True,
               xgrid=False, color=OK_PRIMARY,
               round_pct=False, ascending=True,
+              legend='', legend_y=-0.15,
               file_format='png',
               file_name=None, charts_folder=CHARTS_FOLDER,
               zero_is_unavailable=False,
+              axvline=False,
               **kwargs):
     df_tmp = df[metric_col].sort_values(ascending=ascending)
     if round_pct is True:
@@ -114,10 +117,13 @@ def plot_barh(df, metric_col,
     ax.set_xlabel(xlabel)
     ax.xaxis.labelpad = M_LABEL_PAD
 
+    if axvline is not False:
+        ax.axvline(axvline, zorder=2, color='#8b8b8b', linewidth=0.6)
+
     if annotate is True:
         for p in ax.patches:
             left, bottom, width, height = p.get_bbox().bounds
-            label = str(round(width, 1))
+            label = str(round(width, 1)).replace('.', ',')
             if zero_is_unavailable and width == 0:
                 label = '(Dados indisponíveis)'
             ax.annotate(label, xy=((left + width) + 0.5, bottom + height / 2),
@@ -125,6 +131,11 @@ def plot_barh(df, metric_col,
 
     remove_chart_spines(ax)
     # set_ticks(ax)
+
+    ax.text(0, legend_y, legend,
+         horizontalalignment='left',
+         verticalalignment='center',
+         transform = ax.transAxes)
 
     if file_name:
         ax.figure.savefig(f'{charts_folder}/{file_name}.{file_format}',
@@ -137,7 +148,8 @@ def plot_heatmap(df, metric_cols, cols_order=[],
               ylabel='', xlabel='', annotate=True,
               xgrid=False, color=OK_COLOR_SCALE_DIVERGING,
               xticklabels=[], vmin=0, vmax=100,
-              round_pct=False, legend='', legend_y=-0.15,
+              round_pct=False,
+              legend='', legend_y=-0.15,
               cbar_ticks=[0, 50, 100],
               cbar_labels=[' 0%', ' 50%', ' 100%'],
               file_format='png',
@@ -177,3 +189,68 @@ def plot_heatmap(df, metric_cols, cols_order=[],
     if file_name:
         ax.figure.savefig(f'{charts_folder}/{file_name}.{file_format}',
                           bbox_inches='tight', dpi=300, facecolor='#fff')
+
+
+def plot_line(df,
+              figsize=STANDARD_FIGSIZE,
+              facecolor='#f2f3f2', title='',
+              ylabel='', xlabel='', annotate=False,
+              grid=False, color=OK_PRIMARY,
+              round_pct=False,
+              show_legend=False, legend=None,
+              legend_bbox=(1.0, -0.25), legend_pos='lower right',
+              label='', label_y=-0.15,
+              file_format='png',
+              file_name=None, charts_folder=CHARTS_FOLDER,
+              axvline=False,
+              date_string=False,
+              **kwargs):
+    df_tmp = df
+    if round_pct is True:
+        df_tmp = round(df_tmp * 100, 1)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    df_tmp.plot.line(ax=ax, color=color, zorder=3, legend=show_legend)
+
+    if date_string:
+        ax.xaxis.set_major_formatter(DateFormatter(date_string))
+
+    if show_legend is True:
+        ax.legend(legend, loc=legend_pos, bbox_to_anchor=legend_bbox, frameon=True)
+
+    ax.set_facecolor(facecolor)
+    if grid is True:
+        # set_grid_x(ax)
+        set_grid_y(ax)
+
+    ax.set_title(title, fontsize=BIGGER_SIZE, pad=M_LABEL_PAD)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.xaxis.labelpad = M_LABEL_PAD
+
+    if axvline is not False:
+        ax.axvline(axvline, zorder=2, color='#8b8b8b', linewidth=0.6)
+
+    if annotate is True:
+        for p in ax.patches:
+            left, bottom, width, height = p.get_bbox().bounds
+            label = str(round(width, 1)).replace('.', ',')
+            if zero_is_unavailable and width == 0:
+                label = '(Dados indisponíveis)'
+            ax.annotate(label, xy=((left + width) + 0.5, bottom + height / 2),
+                        ha='left', va='center')
+
+    remove_chart_spines(ax)
+    # set_ticks(ax)
+
+    ax.text(0, label_y, label,
+         horizontalalignment='left',
+         verticalalignment='center',
+         transform = ax.transAxes)
+
+    if file_name:
+        ax.figure.savefig(f'{charts_folder}/{file_name}.{file_format}',
+                          bbox_inches='tight', dpi=300, facecolor='#fff')
+
+    return ax

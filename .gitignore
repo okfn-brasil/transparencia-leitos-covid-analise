@@ -1,5 +1,8 @@
 python-env/
 data/hospitais/
+data/hospitais*/
+data/leitos/bak/*
+bak/*
 *.ipynb_checkpoints/*
 *.~lock.*
 *__pycache__*

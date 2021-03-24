@@ -4,6 +4,7 @@
 
 - API Leitos DataSUS
 - CNES
+- Dados Painéis Estaduais
 
 ## Setup
 

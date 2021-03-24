@@ -86,7 +86,7 @@ def get_all_hospital_data(df):
             counter += 1
 
     # ler arquivos baixados
-    cnes_files = glob.glob('{DATA_FOLDER}/*.json')
+    cnes_files = glob.glob(f'{DATA_FOLDER}/*.json')
 
     frames = []
     for file_path in cnes_files:
