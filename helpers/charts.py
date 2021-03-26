@@ -194,7 +194,8 @@ def plot_heatmap(df, metric_cols, cols_order=[],
 def plot_line(df,
               figsize=STANDARD_FIGSIZE,
               facecolor='#f2f3f2', title='',
-              ylabel='', xlabel='', annotate=False,
+              ylabel='', xlabel='',
+              annotate=False, annotate_rows=[],
               grid=False, color=OK_PRIMARY,
               round_pct=False,
               show_legend=False, legend=None,
@@ -204,6 +205,7 @@ def plot_line(df,
               file_name=None, charts_folder=CHARTS_FOLDER,
               axvline=False,
               date_string=False,
+              date_col='',
               **kwargs):
     df_tmp = df
     if round_pct is True:
@@ -232,14 +234,13 @@ def plot_line(df,
     if axvline is not False:
         ax.axvline(axvline, zorder=2, color='#8b8b8b', linewidth=0.6)
 
-    if annotate is True:
-        for p in ax.patches:
-            left, bottom, width, height = p.get_bbox().bounds
-            label = str(round(width, 1)).replace('.', ',')
-            if zero_is_unavailable and width == 0:
-                label = '(Dados indisponíveis)'
-            ax.annotate(label, xy=((left + width) + 0.5, bottom + height / 2),
-                        ha='left', va='center')
+    if annotate is True and annotate_rows:
+        for idx in annotate_rows:
+            row = df_tmp.reset_index().iloc[idx]
+            for col in df_tmp.columns.values:
+                label = str(round(row[col], 1)).replace('.', ',')
+                ax.annotate(label, xy=(row[date_col], row[col]),
+                   ha='center', xytext=(0, 10), textcoords="offset points")
 
     remove_chart_spines(ax)
     # set_ticks(ax)
