@@ -12,7 +12,6 @@ STANDARD_HEADERS = {
     'Cache-Control': 'no-cache',
     'Accept': 'application/json, text/plain, */*',
     'Referer': 'http://cnes.datasus.gov.br/pages/estabelecimentos/consulta.jsp',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
 }
 
 DATA_FOLDER = 'data/hospitais'
