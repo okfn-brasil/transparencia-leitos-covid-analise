@@ -8,6 +8,8 @@
 
 ## Setup
 
-    virtualenv -p python3 python-env
-    source python-env/bin/activate
-    pip install -r requirements.txt
+~~~shell
+virtualenv -p python3 python-env
+source python-env/bin/activate
+pip install -r requirements.txt
+~~~
