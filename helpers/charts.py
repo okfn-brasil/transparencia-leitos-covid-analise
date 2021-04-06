@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import DateFormatter
 import seaborn as sns
+import numpy as np
 
 # this sets the python locale to pt_BR.UTF-8
 import locale
@@ -92,18 +93,22 @@ def plot_barh(df, metric_col,
               facecolor='#f2f3f2', title='',
               ylabel='', xlabel='', annotate=True,
               xgrid=False, color=OK_PRIMARY,
-              round_pct=False, ascending=True,
+              round_pct=False, round_places=0,
+              ascending=True,
               legend='', legend_y=-0.15,
               file_format='png',
               file_name=None, charts_folder=CHARTS_FOLDER,
               zero_is_unavailable=False,
               axvline=False,
+              color_br=True,
               **kwargs):
     df_tmp = df[metric_col].sort_values(ascending=ascending)
     if round_pct is True:
-        df_tmp = round(df_tmp * 100, 1)
+        df_tmp = round(df_tmp * 100, round_places)
     fig, ax = plt.subplots(figsize=figsize)
 
+    if color_br:
+        color = ['#666' if i == 'Brasil' else color for i in df_tmp.index]
     df_tmp.plot.barh(ax=ax, color=color, zorder=3)
 
     ax.set_xlim(0, round(df_tmp.max() * xlim_padding))
@@ -123,7 +128,10 @@ def plot_barh(df, metric_col,
     if annotate is True:
         for p in ax.patches:
             left, bottom, width, height = p.get_bbox().bounds
-            label = str(round(width, 1)).replace('.', ',')
+            if round_places == 0:
+                label = str(int(width))
+            else:
+                label = str(round(width, round_places)).replace('.', ',')
             if zero_is_unavailable and width == 0:
                 label = '(Dados indisponíveis)'
             ax.annotate(label, xy=((left + width) + 0.5, bottom + height / 2),
@@ -148,21 +156,32 @@ def plot_heatmap(df, metric_cols, cols_order=[],
               ylabel='', xlabel='', annotate=True,
               xgrid=False, color=OK_COLOR_SCALE_DIVERGING,
               xticklabels=[], vmin=0, vmax=100,
-              round_pct=False,
+              round_pct=False, round_places=0,
               legend='', legend_y=-0.15,
               cbar_ticks=[0, 50, 100],
               cbar_labels=[' 0%', ' 50%', ' 100%'],
               file_format='png',
               file_name=None, charts_folder=CHARTS_FOLDER,
+              color_br=True,
               **kwargs):
     df_tmp = df[metric_cols]
     if round_pct is True:
-        df_tmp = round(df_tmp * 100, 1)
+        df_tmp = round(df_tmp * 100, round_places)
     if cols_order:
         df_tmp = df_tmp.reindex(columns=cols_order)
     fig, ax = plt.subplots(figsize=figsize)
-
-    sns.heatmap(df_tmp, annot=annotate, ax=ax, cmap=color, fmt='g', vmin=vmin, vmax=vmax, xticklabels=xticklabels)
+    
+    if color_br:
+        df_tmp_br = df_tmp.copy()
+        df_tmp_other = df_tmp.copy()
+        for c in df_tmp.columns.values:
+            df_tmp_br[c] = np.where(df_tmp_br.index == 'Brasil', df_tmp_br[c].astype(int), '')
+            df_tmp_other[c] = np.where(df_tmp_other.index != 'Brasil', df_tmp_other[c].astype(int), '')
+        sns.heatmap(df_tmp, annot=False, ax=ax, cmap=color, vmin=vmin, vmax=vmax, xticklabels=xticklabels)
+        sns.heatmap(df_tmp, annot=df_tmp_br, ax=ax, cmap=color, fmt='s', vmin=vmin, vmax=vmax, xticklabels=xticklabels, cbar=False, annot_kws={'weight': 'bold'})
+        sns.heatmap(df_tmp, annot=df_tmp_other, ax=ax, cmap=color, fmt='s', vmin=vmin, vmax=vmax, xticklabels=xticklabels, cbar=False)
+    else:
+        sns.heatmap(df_tmp, annot=annotate, ax=ax, cmap=color, fmt='g', vmin=vmin, vmax=vmax, xticklabels=xticklabels)
 
     ax.set_facecolor(facecolor)
     ax.set_title(title, fontsize=BIGGER_SIZE, pad=M_LABEL_PAD)
@@ -171,6 +190,12 @@ def plot_heatmap(df, metric_cols, cols_order=[],
     ax.xaxis.labelpad = M_LABEL_PAD
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=12)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0, fontsize=12)
+    
+    if color_br:
+        for idx, tick in enumerate(ax.get_yticklabels()):
+            if tick.get_text() == 'Brasil':
+                ax.get_yticklabels()[idx].set_fontweight('bold')
+                
 
     for i in range(df_tmp.shape[0] + 1):
         ax.axhline(i, color='white', lw=3)
@@ -197,7 +222,7 @@ def plot_line(df,
               ylabel='', xlabel='',
               annotate=False, annotate_rows=[],
               grid=False, color=OK_PRIMARY,
-              round_pct=False,
+              round_pct=False, round_places=0,
               show_legend=False, legend=None,
               legend_bbox=(1.0, -0.25), legend_pos='lower right',
               label='', label_y=-0.15,
@@ -209,7 +234,7 @@ def plot_line(df,
               **kwargs):
     df_tmp = df
     if round_pct is True:
-        df_tmp = round(df_tmp * 100, 1)
+        df_tmp = round(df_tmp * 100, round_places)
 
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -238,17 +263,20 @@ def plot_line(df,
         for idx in annotate_rows:
             row = df_tmp.reset_index().iloc[idx]
             for col in df_tmp.columns.values:
-                label = str(round(row[col], 1)).replace('.', ',')
+                if round_places == 0:
+                    label = str(int(row[col]))
+                else:
+                    label = str(round(row[col], round_places)).replace('.', ',')
                 ax.annotate(label, xy=(row[date_col], row[col]),
                    ha='center', xytext=(0, 10), textcoords="offset points")
 
     remove_chart_spines(ax)
     # set_ticks(ax)
 
-    ax.text(0, label_y, label,
-         horizontalalignment='left',
-         verticalalignment='center',
-         transform = ax.transAxes)
+#     ax.text(0, label_y, label,
+#          horizontalalignment='left',
+#          verticalalignment='center',
+#          transform = ax.transAxes)
 
     if file_name:
         ax.figure.savefig(f'{charts_folder}/{file_name}.{file_format}',
